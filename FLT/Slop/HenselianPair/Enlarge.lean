@@ -6,8 +6,6 @@ Authors: Akhil Mathew
 module
 
 public import FLT.Slop.HenselianPair.Nilpotent
-public import Mathlib.RingTheory.Finiteness.Ideal
-public import Mathlib.RingTheory.Noetherian.Defs
 
 /-!
 # Enlarging the ideal of a Henselian pair within its radical
@@ -28,10 +26,12 @@ radical-preserving comparisons.
 * `IsHenselianPair.iff_radical` — `(R, I)` is Henselian iff `(R, radical I)` is.
 * `IsHenselianPair.iff_pow` / `pow` / `of_pow` — invariance under passing to powers `I ^ n`.
 * `IsHenselianPair.iff_of_radical_eq` — equal radicals give equivalent Henselian-pair conditions.
-* `IsHenselianPair.iff_sup_of_isNilpotent`, `iff_sup_of_le_radical`, and the `quotient_left` /
-  `quotient_right` families — behaviour of `I ⊔ J` under nilpotent or radical-bounded `J`.
-* `IsHenselianPair.henselianLocalRing_of_radical_eq_maximalIdeal` and variants — local-ring
-  corollaries.
+* `IsHenselianPair.sup_of_isNilpotent` — adjoining a nilpotent ideal to `I` preserves the
+  Henselian-pair condition (Stacks Tag 0G1R).
+* `IsHenselianPair.iff_sup_quotient_right` / `iff_sup_quotient_left` — the sum `I ⊔ J` is
+  Henselian iff `I` is and the image of `J` in `R ⧸ I` is (Stacks Tag 0DYD).
+* `IsHenselianPair.henselianLocalRing_of_radical_eq_maximalIdeal` and
+  `henselianLocalRing_of_maximalIdeal_pow` — local-ring corollaries.
 
 ## Implementation notes
 
@@ -96,6 +96,7 @@ theorem iff_of_le_of_pow_le {I J : Ideal R} (hIJ : I ≤ J) {n : ℕ} (hn : J ^ 
 
 /-- **Enlargement within the radical** (Stacks Tag 09XJ, enlarging direction).
 If `(R, I)` is Henselian, `I ≤ J`, and `J ≤ √I`, then `(R, J)` is Henselian. -/
+@[stacks 09XJ]
 theorem of_le_of_le_radical {I J : Ideal R} (h : IsHenselianPair R I) (hIJ : I ≤ J)
     (hJ : J ≤ I.radical) : IsHenselianPair R J :=
   of_le_of_quotient hIJ h
@@ -113,15 +114,6 @@ theorem of_le_of_isNilpotent_map_quotient {I J : Ideal R} (h : IsHenselianPair R
     IsHenselianPair R J := by
   obtain ⟨n, hn⟩ := Ideal.exists_pow_le_of_isNilpotent_map_quotient hJ
   exact of_le_of_pow_le h hIJ hn
-
-/-- Nilpotent quotient ideals define equivalent Henselian-pair conditions.
-
-The reverse implication needs no nilpotence: shrinking the ideal of a Henselian pair always
-yields a Henselian pair (`IsHenselianPair.of_le`). -/
-theorem iff_of_le_of_isNilpotent_map_quotient {I J : Ideal R} (hIJ : I ≤ J)
-    (hJ : IsNilpotent (J.map (Ideal.Quotient.mk I))) :
-    IsHenselianPair R I ↔ IsHenselianPair R J :=
-  ⟨fun h => of_le_of_isNilpotent_map_quotient h hIJ hJ, fun h => h.of_le hIJ⟩
 
 /-- Replacing an ideal by a positive power does not change the Henselian-pair
 condition. -/
@@ -169,13 +161,6 @@ theorem iff_sup_of_isNilpotent_map_quotient {I J : Ideal R}
   obtain ⟨n, hn⟩ := Ideal.exists_pow_le_of_isNilpotent_map_quotient hJ
   exact iff_sup_of_pow_le hn
 
-/-- Symmetric form of `iff_sup_of_isNilpotent_map_quotient`. -/
-theorem iff_sup_of_isNilpotent_map_quotient_left {I J : Ideal R}
-    (hI : IsNilpotent (I.map (Ideal.Quotient.mk J))) :
-    IsHenselianPair R J ↔ IsHenselianPair R (I ⊔ J) := by
-  simpa [sup_comm] using
-    (iff_sup_of_isNilpotent_map_quotient (R := R) (I := J) (J := I) hI)
-
 /-- Adding a nilpotent ideal does not change the Henselian-pair condition. -/
 theorem iff_sup_of_isNilpotent {I J : Ideal R} (hJ : IsNilpotent J) :
     IsHenselianPair R I ↔ IsHenselianPair R (I ⊔ J) :=
@@ -185,27 +170,16 @@ theorem iff_sup_of_isNilpotent {I J : Ideal R} (hJ : IsNilpotent J) :
 /-- If `(R, I)` is Henselian and `J` is nilpotent, then `(R, I ⊔ J)` is
 Henselian.  This is the nilpotent-addend case of the sum theorem (Stacks Tag
 0G1R). -/
+@[stacks 0G1R]
 theorem sup_of_isNilpotent {I J : Ideal R} (h : IsHenselianPair R I)
     (hJ : IsNilpotent J) : IsHenselianPair R (I ⊔ J) :=
   (iff_sup_of_isNilpotent hJ).mp h
-
-/-- If `(R, I ⊔ J)` is Henselian and `J` is nilpotent, then `(R, I)` is
-Henselian. -/
-theorem of_sup_of_isNilpotent {I J : Ideal R} (hJ : IsNilpotent J)
-    (h : IsHenselianPair R (I ⊔ J)) : IsHenselianPair R I :=
-  (iff_sup_of_isNilpotent hJ).mpr h
 
 /-- Symmetric nilpotent-addend form of `sup_of_isNilpotent`. -/
 theorem sup_of_isNilpotent_left {I J : Ideal R} (hI : IsNilpotent I)
     (h : IsHenselianPair R J) : IsHenselianPair R (I ⊔ J) := by
   rw [sup_comm]
   exact h.sup_of_isNilpotent hI
-
-/-- Adding an ideal contained in `radical I` does not change the Henselian-pair
-condition. -/
-theorem iff_sup_of_le_radical {I J : Ideal R} (hJI : J ≤ I.radical) :
-    IsHenselianPair R I ↔ IsHenselianPair R (I ⊔ J) :=
-  iff_of_le_of_le_radical le_sup_left (sup_le Ideal.le_radical hJI)
 
 /-- **Quotient form of the sum criterion.**  A binary sum `I ⊔ J` is Henselian
 exactly when `I` is Henselian and the image of `J` is Henselian after quotienting
@@ -259,64 +233,6 @@ theorem iff_sup_of_map_quotient_le_nilradical {I J : Ideal R}
     IsHenselianPair R I ↔ IsHenselianPair R (I ⊔ J) := by
   refine ⟨fun hI => ?_, fun hsup => hsup.of_le le_sup_left⟩
   exact sup_of_quotient_right hI (of_le_nilradical hJ)
-
-/-- Symmetric form of `iff_sup_of_map_quotient_le_nilradical`. -/
-theorem iff_sup_of_map_quotient_le_nilradical_left {I J : Ideal R}
-    (hI : I.map (Ideal.Quotient.mk J) ≤ nilradical (R ⧸ J)) :
-    IsHenselianPair R J ↔ IsHenselianPair R (I ⊔ J) := by
-  simpa [sup_comm] using
-    (iff_sup_of_map_quotient_le_nilradical (R := R) (I := J) (J := I) hI)
-
-/-- Quotient-image stability in the nilradical-modulo-`J` case: if `(R, J)` is
-Henselian and the image of `I` in `R ⧸ J` is locally nilpotent, then the image
-of `J` in `R ⧸ I` is Henselian. -/
-theorem quotient_right_of_pair_of_map_quotient_le_nilradical {I J : Ideal R}
-    (hJ : IsHenselianPair R J)
-    (hI : I.map (Ideal.Quotient.mk J) ≤ nilradical (R ⧸ J)) :
-    IsHenselianPair (R ⧸ I) (J.map (Ideal.Quotient.mk I)) :=
-  quotient_right_of_sup ((iff_sup_of_map_quotient_le_nilradical_left (R := R)
-    (I := I) (J := J) hI).mp hJ)
-
-/-- Quotient-image stability in the nilpotent-modulo-`J` case: if `(R, J)` is
-Henselian and the image of `I` in `R ⧸ J` is nilpotent, then the image of `J`
-in `R ⧸ I` is Henselian. -/
-theorem quotient_right_of_pair_of_isNilpotent_map_quotient {I J : Ideal R}
-    (hJ : IsHenselianPair R J)
-    (hI : IsNilpotent (I.map (Ideal.Quotient.mk J))) :
-    IsHenselianPair (R ⧸ I) (J.map (Ideal.Quotient.mk I)) :=
-  quotient_right_of_pair_of_map_quotient_le_nilradical hJ
-    (fun _ hx => mem_nilradical.mpr (Ideal.isNilpotent_of_mem hI hx))
-
-/-- Quotient-image stability in the radical case: if `(R, J)` is Henselian and
-`I ≤ √J`, then the image of `J` in `R ⧸ I` is Henselian. -/
-theorem quotient_right_of_pair_of_le_radical {I J : Ideal R}
-    (hJ : IsHenselianPair R J) (hI : I ≤ J.radical) :
-    IsHenselianPair (R ⧸ I) (J.map (Ideal.Quotient.mk I)) :=
-  quotient_right_of_pair_of_map_quotient_le_nilradical hJ
-    (Ideal.map_quotient_le_nilradical_of_le_radical hI)
-
-/-- Symmetric quotient-image stability in the nilradical-modulo-`I` case. -/
-theorem quotient_left_of_pair_of_map_quotient_le_nilradical {I J : Ideal R}
-    (hI : IsHenselianPair R I)
-    (hJ : J.map (Ideal.Quotient.mk I) ≤ nilradical (R ⧸ I)) :
-    IsHenselianPair (R ⧸ J) (I.map (Ideal.Quotient.mk J)) :=
-  quotient_left_of_sup ((iff_sup_of_map_quotient_le_nilradical (R := R)
-    (I := I) (J := J) hJ).mp hI)
-
-/-- Symmetric quotient-image stability in the nilpotent-modulo-`I` case. -/
-theorem quotient_left_of_pair_of_isNilpotent_map_quotient {I J : Ideal R}
-    (hI : IsHenselianPair R I)
-    (hJ : IsNilpotent (J.map (Ideal.Quotient.mk I))) :
-    IsHenselianPair (R ⧸ J) (I.map (Ideal.Quotient.mk J)) :=
-  quotient_left_of_pair_of_map_quotient_le_nilradical hI
-    (fun _ hx => mem_nilradical.mpr (Ideal.isNilpotent_of_mem hJ hx))
-
-/-- Symmetric quotient-image stability in the radical case. -/
-theorem quotient_left_of_pair_of_le_radical {I J : Ideal R}
-    (hI : IsHenselianPair R I) (hJ : J ≤ I.radical) :
-    IsHenselianPair (R ⧸ J) (I.map (Ideal.Quotient.mk J)) :=
-  quotient_left_of_pair_of_map_quotient_le_nilradical hI
-    (Ideal.map_quotient_le_nilradical_of_le_radical hJ)
 
 /-- Same-radical invariance (Stacks Tag 09XJ).  If `I` and `J` have the same
 radical, then `(R, I)` is Henselian iff `(R, J)` is Henselian. -/

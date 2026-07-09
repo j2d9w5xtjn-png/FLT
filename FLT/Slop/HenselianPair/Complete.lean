@@ -6,17 +6,14 @@ Authors: Akhil Mathew
 module
 
 public import FLT.Slop.HenselianPair.Enlarge
-public import FLT.Slop.HenselianPair.Nilpotent
 public import Mathlib.RingTheory.AdicCompletion.AsTensorProduct
-public import Mathlib.RingTheory.AdicCompletion.Basic
 
 /-!
 # Adically complete rings give Henselian pairs
 
 If `R` is `I`-adically complete then `(R, I)` is a Henselian pair.  This upgrades mathlib's
 `IsAdicComplete.henselianRing` (the *root*-lifting form) to the full *factorisation*-lifting
-form, and derives a range of consequences for algebras, radicals, finite/Noetherian settings,
-and complete local rings.
+form, and derives the base-change forms for algebras and the complete local ring corollaries.
 
 The proof follows the tower route.  For each `m`, the ring `R ⧸ I ^ (m+1)` is Henselian at the
 nilpotent ideal `I·(R ⧸ I ^ (m+1))`, so a coprime monic factorisation of `f mod I` lifts to a
@@ -30,10 +27,9 @@ monic `G, H` with `f = G * H` and the right reductions mod `I` (checked via `IsH
 * `IsHenselianPair.of_isAdicComplete` — if `R` is `I`-adically complete then `(R, I)` is a
   Henselian pair.
 * `IsHenselianPair.exists_factorization_mod_pow` — the per-level factorisation over `R ⧸ I ^ (m+1)`.
-* `IsHenselianPair.of_isAdicComplete_radical` and the `radical`-comparison variant
-  `of_isAdicComplete_of_radical_eq`.
-* `IsHenselianPair.of_isAdicComplete_map_algebra` and its variants — completeness transported to
-  an algebra.
+* `IsHenselianPair.of_isAdicComplete_map_algebra` — completeness transported to an algebra.
+* `IsHenselianPair.of_isAdicComplete_map_algebra_of_finite_of_isNoetherian` — the same for a
+  finite algebra over a Noetherian complete ring.
 * `HenselianLocalRing.of_isAdicComplete_maximalIdeal` and variants — the local-ring corollaries.
 
 ## Implementation notes
@@ -232,6 +228,7 @@ The tower `R ⧸ I ^ (m+1)` of henselian quotients (`exists_factorization_mod_po
 produces coherent (`coherence_step`) monic lifts `Gₘ, Hₘ` over `R`; their coefficient
 sequences are `I`-adically Cauchy, and the limits (assembled via `IsPrecomplete.prec'`
 and pinned down by `IsHausdorff.haus'`) give the required factorisation over `R`. -/
+@[stacks 0ALJ]
 theorem of_isAdicComplete {I : Ideal R} [IsAdicComplete I R] : IsHenselianPair R I where
   le_jacobson := IsAdicComplete.le_jacobson_bot I
   exists_lift_factorization := by
@@ -427,29 +424,6 @@ theorem of_isAdicComplete {I : Ideal R} [IsAdicComplete I R] : IsHenselianPair R
         exact (Polynomial.coeff_eq_zero_of_natDegree_lt (hdH ▸ not_le.mp hj)).symm
     exact ⟨Gpoly, Hpoly, hGmonic, hHmonic, hfactor, hGmapfinal, hHmapfinal⟩
 
-/-- If `R` is complete for `I`, then it is Henselian for any power-comparable
-larger ideal `J` with `I ≤ J` and `J^n ≤ I`. -/
-theorem of_isAdicComplete_of_le_of_pow_le {I J : Ideal R} [IsAdicComplete I R]
-    (hIJ : I ≤ J) {n : ℕ} (hn : J ^ n ≤ I) : IsHenselianPair R J :=
-  (of_isAdicComplete (I := I)).of_le_of_pow_le hIJ hn
-
-/-- If `R` is complete for `I`, then `(R, √I)` is a Henselian pair. -/
-theorem of_isAdicComplete_radical {I : Ideal R} [IsAdicComplete I R] :
-    IsHenselianPair R I.radical :=
-  (iff_radical (I := I)).mp (of_isAdicComplete (I := I))
-
-/-- If `R` is complete for `I` and `I ≤ J ≤ √I`, then `(R, J)` is a
-Henselian pair. -/
-theorem of_isAdicComplete_of_le_of_le_radical {I J : Ideal R} [IsAdicComplete I R]
-    (hIJ : I ≤ J) (hJ : J ≤ I.radical) : IsHenselianPair R J :=
-  (of_isAdicComplete (I := I)).of_le_of_le_radical hIJ hJ
-
-/-- Same-radical form of completeness-implies-Henselian: if `R` is complete for
-`I` and `I` and `J` have the same radical, then `(R, J)` is Henselian. -/
-theorem of_isAdicComplete_of_radical_eq {I J : Ideal R} [IsAdicComplete I R]
-    (hrad : I.radical = J.radical) : IsHenselianPair R J :=
-  (iff_of_radical_eq hrad).mp (of_isAdicComplete (I := I))
-
 section AlgebraMap
 
 variable {S : Type*} [CommRing S] [Algebra R S]
@@ -462,32 +436,6 @@ theorem of_isAdicComplete_map_algebra {I : Ideal R} [IsAdicComplete I S] :
   haveI : IsAdicComplete (I.map (algebraMap R S)) S :=
     (IsAdicComplete.map_algebraMap_iff (I := I) (S := S) (M := S)).mpr inferInstance
   exact of_isAdicComplete (I := I.map (algebraMap R S))
-
-/-- If an `R`-algebra `S` is complete for the `I`-adic filtration coming from
-`R`, then it is Henselian at the radical of `IS`. -/
-theorem of_isAdicComplete_map_algebra_radical {I : Ideal R} [IsAdicComplete I S] :
-    IsHenselianPair S (I.map (algebraMap R S)).radical :=
-  (iff_radical (I := I.map (algebraMap R S))).mp
-    (of_isAdicComplete_map_algebra (R := R) (S := S) (I := I))
-
-/-- Algebra-map form of the power-comparable 0ALJ wrapper. -/
-theorem of_isAdicComplete_map_algebra_of_le_of_pow_le {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I S] (hIJ : I.map (algebraMap R S) ≤ J) {n : ℕ}
-    (hn : J ^ n ≤ I.map (algebraMap R S)) : IsHenselianPair S J :=
-  (of_isAdicComplete_map_algebra (R := R) (S := S) (I := I)).of_le_of_pow_le hIJ hn
-
-/-- Algebra-map form of the radical-bounded 0ALJ wrapper. -/
-theorem of_isAdicComplete_map_algebra_of_le_of_le_radical {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I S] (hIJ : I.map (algebraMap R S) ≤ J)
-    (hJ : J ≤ (I.map (algebraMap R S)).radical) : IsHenselianPair S J :=
-  (of_isAdicComplete_map_algebra (R := R) (S := S) (I := I)).of_le_of_le_radical hIJ hJ
-
-/-- Same-radical algebra-map form of completeness-implies-Henselian. -/
-theorem of_isAdicComplete_map_algebra_of_radical_eq {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I S] (hrad : (I.map (algebraMap R S)).radical = J.radical) :
-    IsHenselianPair S J :=
-  (iff_of_radical_eq hrad).mp
-    (of_isAdicComplete_map_algebra (R := R) (S := S) (I := I))
 
 end AlgebraMap
 
@@ -504,39 +452,6 @@ theorem of_isAdicComplete_map_algebra_of_finite_of_isNoetherian
   haveI : IsAdicComplete I S :=
     IsAdicComplete.of_finite_module_of_isNoetherian (R := R) (M := S) (I := I)
   exact of_isAdicComplete_map_algebra (R := R) (S := S) (I := I)
-
-/-- Radical form of the finite-algebra complete case. -/
-theorem of_isAdicComplete_map_algebra_radical_of_finite_of_isNoetherian
-    [IsNoetherianRing R] [Module.Finite R S] {I : Ideal R} [IsAdicComplete I R] :
-    IsHenselianPair S (I.map (algebraMap R S)).radical :=
-  (iff_radical (I := I.map (algebraMap R S))).mp
-    (of_isAdicComplete_map_algebra_of_finite_of_isNoetherian
-      (R := R) (S := S) (I := I))
-
-/-- Power-comparable ideal form of the finite-algebra complete case. -/
-theorem of_isAdicComplete_map_algebra_of_finite_of_isNoetherian_of_le_of_pow_le
-    [IsNoetherianRing R] [Module.Finite R S] {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I R] (hIJ : I.map (algebraMap R S) ≤ J) {n : ℕ}
-    (hn : J ^ n ≤ I.map (algebraMap R S)) : IsHenselianPair S J :=
-  (of_isAdicComplete_map_algebra_of_finite_of_isNoetherian
-    (R := R) (S := S) (I := I)).of_le_of_pow_le hIJ hn
-
-/-- Radical-bounded ideal form of the finite-algebra complete case. -/
-theorem of_isAdicComplete_map_algebra_of_finite_of_isNoetherian_of_le_of_le_radical
-    [IsNoetherianRing R] [Module.Finite R S] {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I R] (hIJ : I.map (algebraMap R S) ≤ J)
-    (hJ : J ≤ (I.map (algebraMap R S)).radical) : IsHenselianPair S J :=
-  (of_isAdicComplete_map_algebra_of_finite_of_isNoetherian
-    (R := R) (S := S) (I := I)).of_le_of_le_radical hIJ hJ
-
-/-- Same-radical form of the finite-algebra complete case. -/
-theorem of_isAdicComplete_map_algebra_of_finite_of_isNoetherian_of_radical_eq
-    [IsNoetherianRing R] [Module.Finite R S] {I : Ideal R} {J : Ideal S}
-    [IsAdicComplete I R] (hrad : (I.map (algebraMap R S)).radical = J.radical) :
-    IsHenselianPair S J :=
-  (iff_of_radical_eq hrad).mp
-    (of_isAdicComplete_map_algebra_of_finite_of_isNoetherian
-      (R := R) (S := S) (I := I))
 
 end FiniteNoetherianAlgebra
 

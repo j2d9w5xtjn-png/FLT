@@ -6,8 +6,6 @@ Authors: Akhil Mathew
 module
 
 public import FLT.Slop.HenselianPair.Defs
-public import Mathlib.RingTheory.Jacobson.Ideal
-public import Mathlib.RingTheory.Nilpotent.Basic
 
 /-!
 # Square-zero ideals give Henselian pairs
@@ -71,6 +69,7 @@ private theorem mul_eq_zero_of_map_eq_zero {I : Ideal R} (hI : I ^ 2 = ⊥) {p q
 /-- **A square-zero ideal gives a Henselian pair** (Stacks Tag 0ALI, the
 "henselian pair" clause, in the special case `I ^ 2 = ⊥`).  This is the core
 infinitesimal factorisation-lifting step. -/
+@[stacks 0ALI "square-zero case"]
 theorem of_sq_eq_bot {I : Ideal R} (hI : I ^ 2 = ⊥) : IsHenselianPair R I where
   le_jacobson := by
     intro x hx

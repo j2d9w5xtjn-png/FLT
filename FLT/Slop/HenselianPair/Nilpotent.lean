@@ -7,12 +7,12 @@ module
 
 public import FLT.Slop.HenselianPair.Quotient
 public import FLT.Slop.HenselianPair.SquareZero
-public import Mathlib.RingTheory.Nilpotent.Basic
 public import Mathlib.RingTheory.Noetherian.Nilpotent
-public import Mathlib.RingTheory.Polynomial.Nilpotent
 
 /-!
-Nilpotent ideals give Henselian pairs (general case of Stacks Tag 0ALI).
+# Nilpotent ideals give Henselian pairs
+
+The general case of Stacks Tag 0ALI.
 
 Building on the square-zero case (`FLT/Slop/HenselianPair/SquareZero.lean`), we prove that if
 `I` is a *nilpotent* ideal (`I ^ N = ⊥` for some `N`) then `(R, I)` is a Henselian
@@ -32,10 +32,14 @@ by lifting coprimality along the nilpotent ideal `I·(R ⧸ K)`.
 * `IsHenselianPair.of_isNilpotent` — the same phrased with `IsNilpotent I`.
 * `IsHenselianPair.of_le_nilradical` — the full locally nilpotent pair clause of
   Stacks Tag 0ALI (`I ≤ nilradical R`).
-* `Ideal.isNilpotent_map` and `IsHenselianPair.of_isNilpotent_map` — nilpotent
-  thickenings remain Henselian after arbitrary base change/image.
+* `IsHenselianPair.factorization_unique` — the coprime monic factorisation lift is
+  unique over a nilpotent ideal.
+* `HenselianLocalRing.of_isNilpotent_maximalIdeal` — a local ring with nilpotent
+  maximal ideal is Henselian; in particular every Artinian local ring is.
 
-See the Stacks Project (More on Algebra, §15.11, tag 0ALI) for context.
+## References
+
+* [Stacks Project, Tag 0ALI](https://stacks.math.columbia.edu/tag/0ALI)
 -/
 
 @[expose] public section
@@ -152,16 +156,6 @@ theorem le_jacobson_bot_of_le_nilradical {I : Ideal R} (hI : I ≤ nilradical R)
     simpa [mul_comm] using (Commute.all y x).isNilpotent_mul_left hxnil
   exact hxy.isUnit_add_one
 
-/-- A subideal of a nilpotent ideal is nilpotent. -/
-theorem _root_.Ideal.isNilpotent_of_le {I J : Ideal R} (hJ : IsNilpotent J) (hIJ : I ≤ J) :
-    IsNilpotent I := by
-  obtain ⟨n, hn⟩ := hJ
-  refine ⟨n, ?_⟩
-  have hpow : I ^ n ≤ J ^ n := Ideal.pow_right_mono hIJ n
-  have hJpow : J ^ n ≤ (⊥ : Ideal R) := le_of_eq (hn.trans Ideal.zero_eq_bot)
-  rw [Ideal.zero_eq_bot]
-  exact le_antisymm (hpow.trans hJpow) bot_le
-
 /-- Nilpotence of ideals is preserved by image under any ring homomorphism. -/
 theorem _root_.Ideal.isNilpotent_map {S : Type*} [CommRing S] (f : R →+* S) {I : Ideal R}
     (hI : IsNilpotent I) : IsNilpotent (I.map f) := by
@@ -213,36 +207,6 @@ theorem _root_.Ideal.map_quotient_le_nilradical_of_le_radical {I J : Ideal R}
     rw [← map_pow, Ideal.Quotient.eq_zero_iff_mem]
     exact hn⟩
 
-/-- Any ideal contained in a nilpotent ideal defines a Henselian pair. -/
-theorem of_le_isNilpotent {I J : Ideal R} (hJ : IsNilpotent J) (hIJ : I ≤ J) :
-    IsHenselianPair R I :=
-  of_isNilpotent (Ideal.isNilpotent_of_le hJ hIJ)
-
-/-- The image of a nilpotent ideal under any ring map defines a Henselian pair. -/
-theorem of_isNilpotent_map {S : Type*} [CommRing S] (f : R →+* S) {I : Ideal R}
-    (hI : IsNilpotent I) : IsHenselianPair S (I.map f) :=
-  of_isNilpotent (Ideal.isNilpotent_map f hI)
-
-/-- If `I ^ n = ⊥`, then every image of `I` defines a Henselian pair. -/
-theorem of_pow_eq_bot_map {S : Type*} [CommRing S] (f : R →+* S) {I : Ideal R}
-    {n : ℕ} (hn : I ^ n = ⊥) : IsHenselianPair S (I.map f) :=
-  of_isNilpotent_map f ⟨n, hn.trans Ideal.zero_eq_bot.symm⟩
-
-/-- If a map kills a power of an ideal, then the image ideal defines a Henselian pair. -/
-theorem of_pow_le_ker_map {S : Type*} [CommRing S] (f : R →+* S) {I : Ideal R}
-    {n : ℕ} (hn : I ^ n ≤ RingHom.ker f) : IsHenselianPair S (I.map f) :=
-  of_isNilpotent (Ideal.isNilpotent_map_of_pow_le_ker f hn)
-
-/-- If `J ^ n ≤ I`, then `(R ⧸ I, J·(R ⧸ I))` is a Henselian pair. -/
-theorem of_quotient_map_of_pow_le {I J : Ideal R} {n : ℕ} (hn : J ^ n ≤ I) :
-    IsHenselianPair (R ⧸ I) (J.map (Ideal.Quotient.mk I)) :=
-  of_isNilpotent (Ideal.isNilpotent_map_quotient_of_pow_le hn)
-
-/-- Algebra-map form of `of_isNilpotent_map`. -/
-theorem of_isNilpotent_map_algebra {S : Type*} [CommRing S] [Algebra R S] {I : Ideal R}
-    (hI : IsNilpotent I) : IsHenselianPair S (I.map (algebraMap R S)) :=
-  of_isNilpotent_map (algebraMap R S) hI
-
 /-- **A locally nilpotent ideal gives a Henselian pair** (Stacks Tag 0ALI, the
 "henselian pair" clause).  Here "locally nilpotent" is expressed as
 `I ≤ nilradical R`, i.e. every element of `I` is nilpotent.
@@ -253,6 +217,7 @@ identity.  The finitely many coefficients of the factorisation defect
 `f - G*H` and the Bézout defect `u*G + v*H - 1` generate a finitely generated
 subideal `K ≤ I`; since `K ≤ nilradical R`, this `K` is nilpotent.  The already
 proved nilpotent case gives a lift modulo `K`, and hence modulo `I`. -/
+@[stacks 0ALI]
 theorem of_le_nilradical {I : Ideal R} (hI : I ≤ nilradical R) : IsHenselianPair R I where
   le_jacobson := le_jacobson_bot_of_le_nilradical hI
   exists_lift_factorization := by
@@ -342,16 +307,6 @@ theorem of_le_nilradical {I : Ideal R} (hI : I ≤ nilradical R) : IsHenselianPa
         _ = (H.map mkK).map qKI := by rw [hhK]
         _ = H.map mkI := by rw [Polynomial.map_map, hcompKI]
         _ = h₀ := hHmap
-
-/-- The image of a locally nilpotent ideal under any ring map defines a Henselian pair. -/
-theorem of_le_nilradical_map {S : Type*} [CommRing S] (f : R →+* S) {I : Ideal R}
-    (hI : I ≤ nilradical R) : IsHenselianPair S (I.map f) :=
-  of_le_nilradical (Ideal.map_le_nilradical f hI)
-
-/-- Algebra-map form of `of_le_nilradical_map`. -/
-theorem of_le_nilradical_map_algebra {S : Type*} [CommRing S] [Algebra R S] {I : Ideal R}
-    (hI : I ≤ nilradical R) : IsHenselianPair S (I.map (algebraMap R S)) :=
-  of_le_nilradical_map (algebraMap R S) hI
 
 /-- **Uniqueness of a Henselian (coprime, monic) factorisation lift over a nilpotent
 ideal.**  If `I` is nilpotent and `g * h = g' * h'` with `g, g'` monic having the same
