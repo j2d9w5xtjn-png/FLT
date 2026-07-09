@@ -5,12 +5,16 @@ Authors: Akhil Mathew
 -/
 module
 
+public import FLT.Slop.HenselianPair.Complete
 public import FLT.Slop.HenselianPair.Coprime
 public import FLT.Slop.HenselianPair.Defs
+public import FLT.Slop.HenselianPair.Enlarge
 public import FLT.Slop.HenselianPair.HenselianRing
 public import FLT.Slop.HenselianPair.Idempotents
+public import FLT.Slop.HenselianPair.Nilpotent
 public import FLT.Slop.HenselianPair.Polynomial
 public import FLT.Slop.HenselianPair.Quotient
+public import FLT.Slop.HenselianPair.SquareZero
 
 /-!
 # Henselian pairs
@@ -23,6 +27,8 @@ This file re-exports the development.
 
 ## Contents
 
+Core theory:
+
 * `FLT.Slop.HenselianPair.Coprime` — coprimality of monic polynomials descends along
   Jacobson-radical quotients.
 * `FLT.Slop.HenselianPair.Polynomial` — polynomial helpers; uniqueness of simple-root
@@ -31,6 +37,15 @@ This file re-exports the development.
 * `FLT.Slop.HenselianPair.Defs` — `IsHenselianPair` and the bridge to `HenselianRing`.
 * `FLT.Slop.HenselianPair.Idempotents` — lifting idempotents (Stacks Tag 09XI(2)).
 * `FLT.Slop.HenselianPair.Quotient` — quotient and subideal stability.
+
+Examples of Henselian pairs:
+
+* `FLT.Slop.HenselianPair.SquareZero` — square-zero ideals give Henselian pairs (Stacks Tag 0ALI).
+* `FLT.Slop.HenselianPair.Nilpotent` — nilpotent and locally nilpotent ideals give Henselian
+  pairs (Stacks Tag 0ALI).
+* `FLT.Slop.HenselianPair.Enlarge` — enlarging the ideal within its radical (Stacks Tag 09XJ).
+* `FLT.Slop.HenselianPair.Complete` — adically complete rings give Henselian pairs (Stacks
+  Tag 0ALJ), upgrading `IsAdicComplete.henselianRing` to factorisation lifting.
 
 ## References
 

@@ -39,6 +39,18 @@ It is declared as a `class` to match Mathlib's neighbours `HenselianRing` and
 - `Idempotents.lean` — idempotents of `R ⧸ I` lift uniquely (Stacks tag 09XI(2));
   the converse Jacobson criteria.
 - `Quotient.lean` — quotient and subideal stability (Stacks tags 09XG, 0DYD).
+
+Examples of Henselian pairs (built on the core above):
+
+- `SquareZero.lean` — square-zero ideals give Henselian pairs (Stacks tag 0ALI); the
+  infinitesimal-lifting step, proved by Bézout correction and polynomial division.
+- `Nilpotent.lean` — nilpotent and locally nilpotent ideals give Henselian pairs
+  (Stacks tag 0ALI), by dévissage over the square-zero case.
+- `Enlarge.lean` — enlarging the ideal within its radical: `I ≤ J ≤ radical I` preserves
+  the Henselian-pair condition (Stacks tag 09XJ); invariance under radicals and powers.
+- `Complete.lean` — adically complete rings give Henselian pairs (Stacks tag 0ALJ),
+  upgrading Mathlib's `IsAdicComplete.henselianRing` from root-lifting to full
+  factorisation-lifting, via a tower argument.
 - `HenselianPair.lean` (parent) re-exports the folder.
 
 ## What Is Proved
@@ -56,6 +68,16 @@ It is declared as a `class` to match Mathlib's neighbours `HenselianRing` and
 - `IsHenselianPair.quotient`, `IsHenselianPair.of_le`, `IsHenselianPair.of_quotient`
   and `iff_of_le_quotient` — quotient stability (tag 09XG), unconditional shrinking
   of the ideal, and the gluing statement (tag 0DYD).
+
+Sources of Henselian pairs:
+
+- `IsHenselianPair.of_sq_eq_bot`, `IsHenselianPair.of_isNilpotent` — square-zero and
+  (locally) nilpotent ideals give Henselian pairs (tag 0ALI).
+- `IsHenselianPair.of_le_of_le_radical`, `IsHenselianPair.iff_radical` — enlarging the
+  ideal within its radical; the condition depends only on `radical I` (tag 09XJ).
+- `IsHenselianPair.of_isAdicComplete` — adically complete rings are Henselian pairs
+  (tag 0ALJ), and `HenselianLocalRing.of_isAdicComplete_maximalIdeal` for complete
+  local rings.
 
 ## What Is Not Proved Here
 
